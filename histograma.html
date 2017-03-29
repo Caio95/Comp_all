@@ -1,0 +1,280 @@
+<html>
+<head>
+    <title>Histogramas</title>
+	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+	<script src="https://cdn.rawgit.com/oliver-moran/jimp/v0.2.27/browser/lib/jimp.min.js"></script> 
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+</head>
+<script>
+  google.charts.load('current', {'packages':['line']});
+  google.charts.setOnLoadCallback(drawChart);
+
+var imagem = null;
+var iamgem2 =null;
+
+function h(imagem){   // HISTOGRAMA BASICO TONS DE CINZA
+        var media = new Array();
+        var w = imagem.bitmap.width;  
+        var h = imagem.bitmap.height;
+
+        for(var i=0; i< 256; i++){
+            media.push(0);
+        }
+        for(var i= 0; i < w; i++){
+            for(var j=0; j< h; j++){
+                var cor = imagem.getPixelColor(i,j);
+                var pixel = Jimp.intToRGBA(cor);
+                var intens = (pixel.r + pixel.g + pixel.b) / 3;
+                media[intens]++;           
+            }
+        }
+       return media;
+    }
+
+function hColor(imagem){   // HISTOGRAMA BASICO PARA CORES
+        var w = imagem.bitmap.width;  
+        var h = imagem.bitmap.height;
+        var red = [];
+        var green = [];
+        var blue = [];
+        for(var i=0; i< w*h; i++){
+            red.push(0);
+            green.push(0);
+            blue.push(0);
+        }
+        for(var i= 0; i < w; i++){
+            for(var j=0; j< h; j++){
+                var cor = imagem.getPixelColor(i,j);
+                var pixel = Jimp.intToRGBA(cor);
+                red[pixel.r]++;
+                green[pixel.g]++;
+                blue[pixel.b]++;         
+            }
+        }
+       drawChart3(red,green,blue);
+    }
+
+function hNormalizado(imagem){   //HISTOGRAMA NORMALIZADO
+        var c = imagem.bitmap.width;  
+        var a = imagem.bitmap.height;
+        var basico = h(imagem);
+        var n =[];
+        for(var i=0; i< basico.length; i++){
+           n.push(basico[i]/c*a);
+        }
+      	return n;
+}
+
+function hAcumulado(imagem){	// HISTOGRAMA ACUMULADO
+    var c = imagem.bitmap.width;  
+    var a = imagem.bitmap.height;
+    var basico = h(imagem);
+    var a =[];
+    for(var i=0; i< basico.length; i++){
+        var c= h(basico[i]);
+        var d = h(basico[i]-1);
+        a.push(c[0] + d[0]);
+    }
+    return a;
+}
+
+function hAcum_normalizado(imagem){	// HISTOGRAMA ACUMULADO NORMALIZADO
+    var w = imagem.bitmap.width;  
+    var h = imagem.bitmap.height;
+    var red = [];
+    var green = [];
+    var blue = [];
+    var matriz = imagem;
+    for(var i=0; i< w*h; i++){
+        red.push(0);
+        green.push(0);
+        blue.push(0);
+    }
+    for(var i=0; i< w; i++){
+    	for(var j=0; j< h; j++){
+    		var cor = imagem.getPixelColor(i,j);
+            var pixel = Jimp.intToRGBA(cor);
+
+            if(pixel.r > 0){
+                red[pixel.r] = ((red[pixel.r]+1)/w*h) + ((red[pixel.r-1])/w*h);
+            }
+            if(pixel.r ==0){
+                red[pixel.r]= (red[pixel.r]+1)/w*h;
+            }
+            if(pixel.g > 0){
+                green[pixel.g] = ((green[pixel.g]+1)/w*h) + ((green[pixel.g-1])/w*h);
+            }
+            if(pixel.g ==0){
+                green[pixel.g]= (green[pixel.g]+1)/w*h;
+            }
+            if(pixel.b > 0){
+                blue[pixel.b] = ((blue[pixel.b]+1)/w*h) + ((blue[pixel.b-1])/w*h);
+            }
+            if(pixel.b ==0){
+                blue[pixel.b]= (blue[pixel.b]+1)/w*h;
+            }
+            var hex = Jimp.rgbaToInt(pixel.r,pixel.g,pixel.b, 0);
+            matriz.setPixelColor(hex, i, j);
+    	}
+    }
+        drawChart3(red,green,blue);
+        return matriz;
+}
+
+function equalizacao(imagem){
+
+    var matriz = hAcum_normalizado(imagem);
+
+    var w = matriz.bitmap.width;
+    var h = matriz.bitmap.height;
+    imagem2 = imagem;
+
+    for(var i=0; i< w; i++){
+        for(var j=0; j< h; j++){
+            var cor = matriz.getPixelColor(i,j);
+            var pixel = Jimp.intToRGBA(cor);
+
+           var hex = Jimp.rgbaToInt(pixel.r, pixel.g, pixel.b);
+           imagem2.setPixelColor(hex, i, j);
+        }
+    }
+    exibirImagem2(imagem2);
+}
+
+  function lerImagem(element) {
+        var arquivo = element.files[0];
+        var reader = new FileReader();
+        reader.readAsArrayBuffer(arquivo);
+        reader.addEventListener('load', function(){
+          Jimp.read(this.result)
+            .then(function(img){
+        	  //img = img.resize(250, 250);
+              imagem = img;
+              exibirImagem(imagem);
+            }).catch(function(erro){
+              console.log('Não foi possível processar os dados da imagem.');
+              console.log(erro);
+            });
+
+        });
+      }
+    function exibirImagem(imagem) {
+        imagem.getBase64(Jimp.MIME_JPEG, function(err, src){
+            var img = document.getElementById('display');
+            img.setAttribute('src', src);
+          });
+      }
+    function exibirImagem2(imagem) {
+    imagem.getBase64(Jimp.MIME_JPEG, function(err, src){
+        var img = document.getElementById('display-resultado');
+        img.setAttribute('src', src);
+      });
+    }
+
+	function drawChart(vetor) {
+		var array = new Array();
+		array = vetor;
+	 	var data = new google.visualization.DataTable();
+	      data.addColumn('number', 'Pixel');
+	      data.addColumn('number', 'Cinza');
+
+	      for(var i=0; i< array.length; i++){
+		      data.addRows([[i,  array[i]]]);
+	      }
+
+	      var options = {
+	        chart: {
+	          title: 'Intensidade de cada Pixel',
+	          subtitle: 'Media'
+	        },
+	        width: 900,
+	        height: 500
+	      };
+
+	      var chart = new google.charts.Line(document.getElementById('linechart_material'));
+	      chart.draw(data, options);
+    }
+
+    function drawChart3(red,green,blue) {
+        var r = new Array();
+        var g = new Array();
+        var b = new Array();
+        r=red;
+        g =green;
+        b= blue;
+        var data = new google.visualization.DataTable();
+          data.addColumn('number', 'Pixel');
+          data.addColumn('number', 'Red');
+          data.addColumn('number', 'Green');
+          data.addColumn('number', 'Blue');
+
+          for(var i=0; i< 256; i++){
+              data.addRows([[i,  r[i], g[i],b[i]]]);
+          }
+
+          var options = {
+            chart: {
+              title: 'Intensidade de cada Pixel',
+              subtitle: 'Media'
+            },
+            colors: ['#e3371c','#00ff00','#0000ff'],
+            width: 900,
+            height: 500
+          };
+
+          var chart = new google.charts.Line(document.getElementById('linechart_material'));
+          chart.draw(data, options);
+    }
+
+	function hB(){
+		var array =h(imagem);
+		drawChart(array);
+	}
+    function hBColor(){
+        hColor(imagem);
+    }
+	function normalizado(){
+		var array= hNormalizado(imagem);
+        drawChart(array);
+	}
+	function acumulado(){
+		var array = hAcumulado(imagem);
+        drawChart(array);
+	}
+    function acumuladoNormalizado(){
+        hAcum_normalizado(imagem);
+    }
+    function equaliz(){
+        equalizacao(imagem);
+    }      
+
+</script>
+<body>
+
+<div>
+		<p>Escolha um arquivo de imagem</p>
+		<input type="file" onchange="lerImagem(this)">
+		<img id="display">
+</div><br>
+<div class="col-md-3">
+    <button class="btn btn-default" onclick="hB()">H. Basico (Cinza)</button>
+    <button class="btn btn-default" onclick="hBColor()">H. Basico (Color)</button>
+</div>
+<div class="col-md-3">
+    <button class="btn btn-default" onclick="normalizado()">H. Normalizado</button>
+    <button class="btn btn-default" onclick="acumulado()">H. Acumulado</button>
+</div>
+<div class="col-md-3">
+    <button class="btn btn-default" onclick="acumuladoNormalizado()">H. Acumulado Normalizado</button>
+    <button class="btn btn-default" onclick="equaliz()">H. Equalizado</button>
+</div>
+<br><br><br><br><br>
+<div id="linechart_material"  style="width: 900px; height: 500px;"></div>
+
+<div class="col-md-4">
+    <h3>Resultado:</h3>
+    <img id="display-resultado">
+</div>
+</body>
+</html>

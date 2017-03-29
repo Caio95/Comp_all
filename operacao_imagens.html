@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Operacoes Com Imagens</title>
+	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+	<script src="https://cdn.rawgit.com/oliver-moran/jimp/v0.2.27/browser/lib/jimp.min.js"></script> 
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+	<script src="https://cdn.rawgit.com/oliver-moran/jimp/v0.2.27/browser/lib/jimp.min.js"></script>
+</head>
+<script type="text/javascript">
+	var imagem_um = null;
+	var imagem_dois = null;
+	var imagem_tres = null;
+
+      function mostrarImagemUm(element) {
+        var arquivo = element.files[0];
+        var reader = new FileReader();
+        reader.readAsArrayBuffer(arquivo);
+        reader.addEventListener('load', function(){
+          Jimp.read(this.result)
+            .then(function(imagem){
+              imagem = imagem.resize(320, 200);
+              imagem_um = imagem;
+              exibirImagem1(imagem);
+            })
+            .catch(function(erro){
+              console.log('Não foi possível processar os dados da imagem.');
+              console.log(erro);
+            });
+
+        });
+      }
+
+	function mostrarImagemDois(element) {
+        var arquivo = element.files[0];
+        var reader = new FileReader();
+        reader.readAsArrayBuffer(arquivo);
+        reader.addEventListener('load', function(){
+          Jimp.read(this.result)
+            .then(function(imagem){
+              imagem = imagem.resize(320, 200);
+              imagem_dois = imagem;
+              exibirImagem2(imagem);
+            })
+            .catch(function(erro){
+              console.log('Não foi possível processar os dados da imagem.');
+              console.log(erro);
+            });
+
+        });
+      }
+
+  function exibirImagem1(imagem) {
+    imagem.getBase64(Jimp.MIME_JPEG, function(err, src){
+        var img = document.getElementById('display1');
+        img.setAttribute('src', src);
+      });
+  }
+  function exibirImagem2(imagem) {
+    imagem.getBase64(Jimp.MIME_JPEG, function(err, src){
+        var img = document.getElementById('display2');
+        img.setAttribute('src', src);
+      });
+  }
+  function exibirImagem3(imagem) {
+    imagem.getBase64(Jimp.MIME_JPEG, function(err, src){
+        var img = document.getElementById('display-resultado');
+        img.setAttribute('src', src);
+      });
+  }
+
+  function operacaoSoma(imagem){           //OPERAÇÃO SOMA
+        var w = imagem_um.bitmap.width;  
+        var h = imagem_um.bitmap.height;
+        var r, g , b,a;
+        imagem_tres = imagem_um;
+        for(var i=0; i< w; i++){
+        	for(var j=0; j< h; j++){
+        		var img1 = imagem_um.getPixelColor(i,j);
+        		var img2 = imagem_dois.getPixelColor(i,j);
+        		var rgba1 = Jimp.intToRGBA(img1);
+        		var rgba2 = Jimp.intToRGBA(img2);
+        		r = ((rgba1.r + rgba2.r)/2);
+        		g = ((rgba1.g + rgba2.g)/2);
+        		b = ((rgba1.b + rgba2.b)/2);
+        		a = ((rgba1.a + rgba2.a)/2);
+        		var hex = Jimp.rgbaToInt(r,g,b,a);
+            	imagem_tres.setPixelColor(hex, i, j);
+        	}
+        }
+        exibirImagem3(imagem_tres);
+
+  }
+  function operacaoSubtracao(imagem){       //OPERAÇÃO SUBTRAÇÃO
+        var w = imagem_um.bitmap.width;  
+        var h = imagem_um.bitmap.height;
+        var r, g , b,a;
+        imagem_tres = imagem_um;
+        for(var i=0; i< w; i++){
+        	for(var j=0; j< h; j++){
+        		var img1 = imagem_um.getPixelColor(i,j);
+        		var img2 = imagem_dois.getPixelColor(i,j);
+        		var rgba1 = Jimp.intToRGBA(img1);
+        		var rgba2 = Jimp.intToRGBA(img2);
+        		r = ((rgba1.r - rgba2.r)/2);
+        		g = ((rgba1.g - rgba2.g)/2);
+        		b = ((rgba1.b - rgba2.b)/2);
+        		a = ((rgba1.a - rgba2.a)/2);
+        		if(r<0){
+        			r=0;
+        		}
+        		if(g<0){
+        			g=0;
+        		}
+        		if(b<0){
+        			b=0;
+        		}
+        		if(a < 0){
+        			a=0;
+        		}
+        		var hex = Jimp.rgbaToInt(r, g , b, a);
+            	imagem_tres.setPixelColor(hex, i, j);
+        	}
+        }
+        exibirImagem3(imagem_tres);
+  }
+    function operacaoMultiplicacao(imagem){         //OPERAÇÃO MULTIPLICAÇÃO
+        var w = imagem_um.bitmap.width;  
+        var h = imagem_um.bitmap.height;
+        var r, g , b,a;
+        imagem_tres = imagem_um;
+        for(var i=0; i< w; i++){
+        	for(var j=0; j< h; j++){
+        		var img1 = imagem_um.getPixelColor(i,j);
+        		var img2 = imagem_dois.getPixelColor(i,j);
+        		var rgba1 = Jimp.intToRGBA(img1);
+        		var rgba2 = Jimp.intToRGBA(img2);
+        		r = ((rgba1.r * rgba2.r)/2);
+        		g = ((rgba1.g * rgba2.g)/2);
+        		b = ((rgba1.b * rgba2.b)/2);
+        		a = ((rgba1.a * rgba2.a)/2);
+
+        		if(r > 255){
+        			r=255;
+        		}
+        		if(g > 255){
+        			g=255;
+        		}
+        		if(b > 255){
+        			b=255;
+        		}
+        		if(a > 255){
+        			a=255;
+        		}
+        		var hex = Jimp.rgbaToInt(r, g , b, a);
+            	imagem_tres.setPixelColor(hex, i, j);
+        	}
+        }
+        exibirImagem3(imagem_tres);
+  }
+      function operacaoDivisao(imagem){             //OPERAÇÃO DIVISÃO
+        var w = imagem_um.bitmap.width;  
+        var h = imagem_um.bitmap.height;
+        var r, g , b,a;
+        imagem_tres = imagem_um;
+        for(var i=0; i< w; i++){
+        	for(var j=0; j< h; j++){
+        		var img1 = imagem_um.getPixelColor(i,j);
+        		var img2 = imagem_dois.getPixelColor(i,j);
+        		var rgba1 = Jimp.intToRGBA(img1);
+        		var rgba2 = Jimp.intToRGBA(img2);
+        		r = ((rgba1.r / rgba2.r)/2);
+        		g = ((rgba1.g / rgba2.g)/2);
+        		b = ((rgba1.b / rgba2.b)/2);
+        		a = ((rgba1.a / rgba2.a)/2);
+
+        		var hex = Jimp.rgbaToInt(r, g , b, a);
+            	imagem_tres.setPixelColor(hex, i, j);
+        	}
+        }
+        exibirImagem3(imagem_tres);
+  }
+    function operacaoAnd(imagem){           //OPERAÇÃO AND
+        var w = imagem_um.bitmap.width;  
+        var h = imagem_um.bitmap.height;
+        var r, g , b,a;
+        imagem_tres = imagem_um;
+        for(var i=0; i< w; i++){
+        	for(var j=0; j< h; j++){
+        		var img1 = imagem_um.getPixelColor(i,j);
+        		var img2 = imagem_dois.getPixelColor(i,j);
+        		var rgba1 = Jimp.intToRGBA(img1);
+        		var rgba2 = Jimp.intToRGBA(img2);
+        		r = ((rgba1.r && rgba2.r));
+        		g = ((rgba1.g && rgba2.g));
+        		b = ((rgba1.b && rgba2.b));
+        		a = ((rgba1.a && rgba2.a));
+
+        		var hex = Jimp.rgbaToInt(r, g , b, a);
+            	imagem_tres.setPixelColor(hex, i, j);
+        	}
+        }
+        exibirImagem3(imagem_tres);
+  }
+      function operacaoOr(imagem){              //OPERAÇÃO OR
+        var w = imagem_um.bitmap.width;  
+        var h = imagem_um.bitmap.height;
+        var r, g , b,a;
+        imagem_tres = imagem_um;
+        for(var i=0; i< w; i++){
+        	for(var j=0; j< h; j++){
+        		var img1 = imagem_um.getPixelColor(i,j);
+        		var img2 = imagem_dois.getPixelColor(i,j);
+        		var rgba1 = Jimp.intToRGBA(img1);
+        		var rgba2 = Jimp.intToRGBA(img2);
+        		r = ((rgba1.r || rgba2.r));
+        		g = ((rgba1.g || rgba2.g));
+        		b = ((rgba1.b || rgba2.b));
+        		a = ((rgba1.a || rgba2.a));
+
+        		var hex = Jimp.rgbaToInt(r, g , b, a);
+            	imagem_tres.setPixelColor(hex, i, j);
+        	}
+        }
+        exibirImagem3(imagem_tres);
+  }
+
+</script>
+<body>
+	<div class="row">
+		<div class="col-md-3">
+			<p>Escolha um arquivo de imagem</p>
+			<input type="file" onchange="mostrarImagemUm(this)">
+			<img id="display1">
+		</div>
+		<div class="col-md-3">
+			<p>Escolha um arquivo de imagem</p>
+			<input type="file" onchange="mostrarImagemDois(this)">
+			<img id="display2">
+		</div>
+		<div class="col-md-3">
+			<h4>Operações Aritméticas:</h4>
+			<button class="btn btn-default" onclick="operacaoSoma()">ADD</button>
+			<button class="btn btn-default" onclick="operacaoSubtracao()">SUB</button>
+			<button class="btn btn-default" onclick="operacaoMultiplicacao()">MULT</button>
+			<button class="btn btn-default" onclick="operacaoDivisao()">DIV</button>
+		</div>
+		<div class="col-md-3">
+			<h4>Operações Lógicas:</h4>
+			<button class="btn btn-default" onclick="operacaoAnd()">AND</button>
+			<button class="btn btn-default" onclick="operacaoOr()">OR</button>
+		</div>
+		<div class="col-md-4">
+			<h3>Resultado:</h3>
+			<img id="display-resultado">
+		</div>
+	</div>
+</body>
+</html>
